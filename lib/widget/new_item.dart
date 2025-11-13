@@ -1,0 +1,139 @@
+import 'package:flutter/material.dart';
+import 'package:shoppinglistapp/data/categories.dart';
+import 'package:shoppinglistapp/models/category.dart';
+import 'package:shoppinglistapp/models/grocery_item.dart';
+
+class NewItem extends StatefulWidget {
+  const NewItem({super.key,required this.existingItem});
+  final existingItem;
+  @override
+  State<NewItem> createState() => _NewItemState();
+}
+
+class _NewItemState extends State<NewItem> {
+  TextEditingController emailEditingController = TextEditingController();
+  final _formkey = GlobalKey<FormState>();
+  var _enteredName = '';
+  var _enteredQuantity = 1;
+  var _selectedCategory = categories[Categories.vegetables]!;
+  void _saveItem() {
+    if (_formkey.currentState!.validate()) {
+      _formkey.currentState!.save();
+      Navigator.of(context).pop(
+        GroceryItem(
+          id: DateTime.now().toString(),
+          name: _enteredName,
+          quantity: _enteredQuantity,
+          category: _selectedCategory,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('New Items')),
+      body: Padding(
+        padding: EdgeInsets.all(12),
+        child: Form(
+          key: _formkey,
+          child: Column(
+            children: [
+              TextFormField(
+                maxLength: 50,
+                autocorrect: true,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  label: Text('Name'),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  prefix: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null ||
+                      value.isEmpty ||
+                      value.trim().length <= 1 ||
+                      value.trim().length > 50) {
+                    return 'Must be Between 1 and 50';
+                  }
+                  return null;
+                },
+                onSaved: (newValue) {
+                  _enteredName = newValue!;
+                },
+                controller: emailEditingController,
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      keyboardType: TextInputType.number,
+                      initialValue: _enteredQuantity.toString(),
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            int.tryParse(value) == null ||
+                            int.tryParse(value)! <= 0) {
+                          return 'Must be a valid, positive number.';
+                        }
+                        return null;
+                      },
+                      onSaved: (Value) {
+                        _enteredQuantity = int.parse(Value!);
+                      },
+                      decoration: InputDecoration(label: Text('Quantity')),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonFormField(
+                      value: _selectedCategory,
+                      items: [
+                        for (final category in categories.entries)
+                          DropdownMenuItem(
+                            value: category.value,
+                            child: Row(
+                              children: [
+                                Container(
+                                  height: 16,
+                                  width: 16,
+                                  color: category.value.color,
+                                ),
+                                SizedBox(width: 6),
+                                Text(category.value.title),
+                              ],
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategory = value!;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      _formkey.currentState!.reset();
+                    },
+                    child: Text('Reset'),
+                  ),
+                  ElevatedButton(onPressed: _saveItem, child: Text('Add Item')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
