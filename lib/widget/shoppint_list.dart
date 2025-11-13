@@ -11,6 +11,7 @@ class ShoppingList extends StatefulWidget {
 
 class _ShoppingListState extends State<ShoppingList> {
   late final List<GroceryItem> _groceryItems = [];
+
   void _addItem() async {
     final newItem = await Navigator.push<GroceryItem>(
       context,
@@ -43,41 +44,45 @@ class _ShoppingListState extends State<ShoppingList> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
+    Widget content = Center(child: Text('No Item Added Yet'),);
+    if(_groceryItems.isNotEmpty)
+      {
+       content = ListView.builder(
+          itemCount: _groceryItems.length,
+          itemBuilder:
+              (context, index) => ListTile(
+            leading: Container(
+              height: 20,
+              width: 20,
+              color: _groceryItems[index].category.color,
+            ),
+            title: Text(_groceryItems[index].name),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_groceryItems[index].quantity.toString()),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                  onPressed: () => _editItem(index),
+                ),
+                IconButton(onPressed: () {
+                  setState(() {
+                    _groceryItems.removeAt(index);
+                  });
+                }, icon: Icon(Icons.delete),),
+              ],
+            ),
+          ),
+        );
+      }
     return Scaffold(
       appBar: AppBar(
         title: SafeArea(child: const Text('Your Grocery')),
         actions: [IconButton(onPressed: _addItem, icon: Icon(Icons.add))],
       ),
-      body: ListView.builder(
-        itemCount: _groceryItems.length,
-        itemBuilder:
-            (context, index) => ListTile(
-          leading: Container(
-            height: 20,
-            width: 20,
-            color: _groceryItems[index].category.color,
-          ),
-          title: Text(_groceryItems[index].name),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_groceryItems[index].quantity.toString()),
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blueAccent),
-                onPressed: () => _editItem(index),
-              ),
-              IconButton(onPressed: () {
-                setState(() {
-                  _groceryItems.removeAt(index);
-                });
-              }, icon: Icon(Icons.delete),),
-            ],
-          ),
-        ),
-      ),
+      body: content,
     );
   }
 }
