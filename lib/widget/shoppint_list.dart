@@ -54,14 +54,18 @@ class _ShoppingListState extends State<ShoppingList> {
   }
 
   void _addItem() async {
-    await Navigator.push<GroceryItem>(
+ final newItem = await Navigator.push<GroceryItem>(
       context,
       MaterialPageRoute(
         builder: (context) => NewItem(existingItem: _groceryItems),
       ),
     );
+ if(newItem == null)
+   {
+     return;
+   }
     setState(() {
-      _loadData();
+     _groceryItems.add(newItem);
     });
   }
 

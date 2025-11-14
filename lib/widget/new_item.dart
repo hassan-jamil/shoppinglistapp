@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shoppinglistapp/data/categories.dart';
 import 'package:shoppinglistapp/models/category.dart';
-import 'package:http/http.dart'as http;
+import 'package:http/http.dart' as http;
 
 import '../models/grocery_item.dart';
+
 class NewItem extends StatefulWidget {
-  const NewItem({super.key,required this.existingItem});
+  const NewItem({super.key, required this.existingItem});
   final existingItem;
   @override
   State<NewItem> createState() => _NewItemState();
@@ -22,24 +23,33 @@ class _NewItemState extends State<NewItem> {
   void _saveItem() async {
     if (_formkey.currentState!.validate()) {
       _formkey.currentState!.save();
-      final url = Uri.https('shopping-list-62922-default-rtdb.firebaseio.com','shopping-List.json');
-      await http.post(url,headers: {
-        'Content-Type' : 'application/json',
-      },
+      final url = Uri.https(
+        'shopping-list-62922-default-rtdb.firebaseio.com',
+        'shopping-List.json',
+      );
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': _enteredName,
           'quantity': _enteredQuantity,
           'category': _selectedCategory.title,
-        })
+        }),
       );
-    if(!context.mounted)
-      {
+      final newRes = jsonDecode(response.body);
+      if (!context.mounted) {
         return;
       }
-    Navigator.of(context).pop();
+      Navigator.of(context).pop(
+        GroceryItem(
+          id: newRes['name'],
+          name: _enteredName,
+          quantity: _enteredQuantity,
+          category: _selectedCategory,
+        ),
+      );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
