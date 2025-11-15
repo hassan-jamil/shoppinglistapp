@@ -15,6 +15,8 @@ class ShoppingList extends StatefulWidget {
 
 class _ShoppingListState extends State<ShoppingList> {
   List<GroceryItem> _groceryItems = [];
+  var _isLoading = true;
+  String?  _error;
 
   void _loadData() async {
     final url = Uri.https(
@@ -22,6 +24,13 @@ class _ShoppingListState extends State<ShoppingList> {
       'shopping-List.json',
     );
     final response = await http.get(url);
+    if(response.statusCode >= 400)
+      {
+       setState(() {
+         _error = 'Failed To Fetch Data Please try Again Later.';
+       });
+      }
+
     final Map<String,dynamic> listdata = json.decode(response.body);
 
     final List<GroceryItem> _loadedItem = [];
@@ -44,6 +53,7 @@ class _ShoppingListState extends State<ShoppingList> {
     }
     setState(() {
       _groceryItems = _loadedItem;
+      _isLoading = false;
     });
   }
 
@@ -97,6 +107,14 @@ class _ShoppingListState extends State<ShoppingList> {
   @override
   Widget build(BuildContext context) {
     Widget content = Center(child: Text('No Item Added Yet'));
+    if(_isLoading)
+      {
+        content = Center(child: CircularProgressIndicator(),);
+      }
+    if(_error!= null)
+      {
+        content = Center(child: Text(_error!));
+      }
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
