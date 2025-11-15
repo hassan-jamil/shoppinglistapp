@@ -23,38 +23,54 @@ class _ShoppingListState extends State<ShoppingList> {
       'shopping-list-62922-default-rtdb.firebaseio.com',
       'shopping-List.json',
     );
-    final response = await http.get(url);
-    if (response.statusCode >= 400) {
+
+    try{
+      final response = await http.get(url);
+      if (response.statusCode >= 400) {
+        setState(() {
+          _error = 'Failed To Fetch Data Please try Again Later.';
+        });
+      }
+      if(response.body == 'null')
+      {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      final Map<String, dynamic> listdata = json.decode(response.body);
+
+      final List<GroceryItem> _loadedItem = [];
+
+      for (final item in listdata.entries) {
+        final category =
+            categories.entries
+                .firstWhere(
+                  (carItem) => carItem.value.title == item.value['category'],
+            )
+                .value;
+        _loadedItem.add(
+          GroceryItem(
+            id: item.key,
+            name: item.value['name'],
+            quantity: item.value['quantity'],
+            category: category,
+          ),
+        );
+      }
       setState(() {
-        _error = 'Failed To Fetch Data Please try Again Later.';
+        _groceryItems = _loadedItem;
+        _isLoading = false;
       });
     }
-
-    final Map<String, dynamic> listdata = json.decode(response.body);
-
-    final List<GroceryItem> _loadedItem = [];
-
-    for (final item in listdata.entries) {
-      final category =
-          categories.entries
-              .firstWhere(
-                (carItem) => carItem.value.title == item.value['category'],
-              )
-              .value;
-      _loadedItem.add(
-        GroceryItem(
-          id: item.key,
-          name: item.value['name'],
-          quantity: item.value['quantity'],
-          category: category,
-        ),
-      );
+    catch(error)
+    {
+      setState(() {
+        _error = 'Something Went Wrong Please try Again Later.';
+      });
     }
-    setState(() {
-      _groceryItems = _loadedItem;
-      _isLoading = false;
-    });
-  }
+    }
+
 
   @override
   void initState() {
