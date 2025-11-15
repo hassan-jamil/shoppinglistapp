@@ -16,7 +16,7 @@ class ShoppingList extends StatefulWidget {
 class _ShoppingListState extends State<ShoppingList> {
   List<GroceryItem> _groceryItems = [];
   var _isLoading = true;
-  String?  _error;
+  String? _error;
 
   void _loadData() async {
     final url = Uri.https(
@@ -24,14 +24,13 @@ class _ShoppingListState extends State<ShoppingList> {
       'shopping-List.json',
     );
     final response = await http.get(url);
-    if(response.statusCode >= 400)
-      {
-       setState(() {
-         _error = 'Failed To Fetch Data Please try Again Later.';
-       });
-      }
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = 'Failed To Fetch Data Please try Again Later.';
+      });
+    }
 
-    final Map<String,dynamic> listdata = json.decode(response.body);
+    final Map<String, dynamic> listdata = json.decode(response.body);
 
     final List<GroceryItem> _loadedItem = [];
 
@@ -40,7 +39,7 @@ class _ShoppingListState extends State<ShoppingList> {
           categories.entries
               .firstWhere(
                 (carItem) => carItem.value.title == item.value['category'],
-          )
+              )
               .value;
       _loadedItem.add(
         GroceryItem(
@@ -64,18 +63,17 @@ class _ShoppingListState extends State<ShoppingList> {
   }
 
   void _addItem() async {
- final newItem = await Navigator.push<GroceryItem>(
+    final newItem = await Navigator.push<GroceryItem>(
       context,
       MaterialPageRoute(
         builder: (context) => NewItem(existingItem: _groceryItems),
       ),
     );
- if(newItem == null)
-   {
-     return;
-   }
+    if (newItem == null) {
+      return;
+    }
     setState(() {
-     _groceryItems.add(newItem);
+      _groceryItems.add(newItem);
     });
   }
 
@@ -98,23 +96,31 @@ class _ShoppingListState extends State<ShoppingList> {
     });
   }
 
-  void _dismissibleItem(GroceryItem item) {
+  void _dismissibleItem(GroceryItem item) async {
+    final index = _groceryItems.indexOf(item);
+    final url = Uri.https(
+      'shopping-list-62922-default-rtdb.firebaseio.com',
+      'shopping-List/${item.id}.json',
+    );
+    final response = await http.delete(url);
     setState(() {
       _groceryItems.remove(item);
     });
+    if (response.statusCode >= 400) {
+      setState(() {
+        _groceryItems.insert(index, item);
+      });
+    }
   }
-
   @override
   Widget build(BuildContext context) {
     Widget content = Center(child: Text('No Item Added Yet'));
-    if(_isLoading)
-      {
-        content = Center(child: CircularProgressIndicator(),);
-      }
-    if(_error!= null)
-      {
-        content = Center(child: Text(_error!));
-      }
+    if (_isLoading) {
+      content = Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      content = Center(child: Text(_error!));
+    }
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
@@ -145,11 +151,7 @@ class _ShoppingListState extends State<ShoppingList> {
                       onPressed: () => _editItem(index),
                     ),
                     IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _groceryItems.removeAt(index);
-                        });
-                      },
+                      onPressed: () => _dismissibleItem(_groceryItems[index]),
                       icon: Icon(Icons.delete),
                     ),
                   ],
